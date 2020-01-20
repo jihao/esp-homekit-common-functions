@@ -57,6 +57,7 @@ enum {white_pin=0, blue_pin=1, green_pin=2, red_pin=3} led_pins;
 enum {cycle_effect, strobe_effect, flash_effect, fade_effect, smooth_effect, off_effect} effects_e;
 
 static pwm_info_t pwm_info;
+ETSTimer rgbw_onoff_timer;
 ETSTimer rgbw_set_timer;
 ETSTimer gpio_timer;
 
@@ -110,6 +111,8 @@ homekit_value_t led_saturation_get();
 void led_saturation_set(homekit_value_t value);
 
 void rgbw_set ();
+
+void rgbw_set_breath ();
 
 void gpio_update_set();
 

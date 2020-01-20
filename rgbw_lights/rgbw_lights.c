@@ -452,6 +452,92 @@ void rgbw_set(){
     printf("%s:Current colour after set r=%d,g=%d, b=%d, w=%d,\n",__func__, current_color.red,current_color.green, current_color.blue, current_color.white );
 }
 
+void rgbw_set_breath(){
+
+    /* make sure there are no effects running */
+    colour_effect_reset();
+    previous_colour_effect = off_effect;
+    
+    float fade_factor = 50;
+    int fade_r, fade_g, fade_b, fade_w, r, g, b, w, i;
+    
+    printf("\n%s\n", __func__);
+    printf("%s: Current colour before set r=%d,g=%d, b=%d, w=%d,\n",__func__, current_color.red,current_color.green, current_color.blue, current_color.white );
+    if (led_on==true) {
+        // convert HSI to RGBW
+        
+        HSVtoRGB(led_hue, led_saturation, led_brightness, &target_color);
+        printf("%s: h=%d,s=%d,b=%d => r=%d,g=%d, b=%d\n",__func__, (int)led_hue,(int)led_saturation,(int)led_brightness, target_color.red,target_color.green, target_color.blue );
+        
+        RBGtoRBGW (&target_color);
+        printf("%s: h=%d,s=%d,b=%d => r=%d,g=%d, b=%d, w=%d,\n",__func__, (int)led_hue,(int)led_saturation,(int)led_brightness, target_color.red,target_color.green, target_color.blue, target_color.white );
+        printf ("%s: GPIOS are set as follows : W=%d, R=%d, G=%d, B=%d\n",__func__, white_gpio.value.int_value,red_gpio.value.int_value, green_gpio.value.int_value, blue_gpio.value.int_value );
+
+        r = current_color.red;
+        g = current_color.green;
+        b = current_color.blue;
+        w = current_color.white;
+        fade_r = (r - target_color.red * PWM_SCALE) /fade_factor;
+        fade_g = (g - target_color.green * PWM_SCALE) /fade_factor;
+        fade_b = (b - target_color.blue * PWM_SCALE) /fade_factor;
+        fade_w = (w - target_color.white * PWM_SCALE) /fade_factor;
+        printf("%s:Current colour before breath set r=%d, g=%d, b=%d, w=%d, r f=%d, g f=%d, b f=%d, w f=%d\n",__func__, r, g, b, w, fade_r, fade_g, fade_b, fade_w );
+        
+        for (i=0; i< fade_factor ; i++)
+        {
+            r -= fade_r;
+            g -= fade_g;
+            b -= fade_b;
+            w -= fade_w;
+            set_colours (r, g, b, w);
+            vTaskDelay (TWENTY_MS/portTICK_PERIOD_MS);
+        }
+        vTaskDelay (FIFTY_MS/portTICK_PERIOD_MS);
+
+        printf("%s:Current colour after breath set r=%d, g=%d, b=%d, w=%d, r f=%d, g f=%d, b f=%d, w f=%d\n",__func__, r, g, b, w, fade_r, fade_g, fade_b, fade_w );
+        
+        current_color.red = target_color.red * PWM_SCALE;
+        current_color.green = target_color.green * PWM_SCALE;
+        current_color.blue = target_color.blue * PWM_SCALE;
+        current_color.white = target_color.white * PWM_SCALE;
+
+        // set_colours (current_color.red, current_color.green, current_color.blue, current_color.white);
+
+    } else {
+        printf("%s: led srtip off\n", __func__);
+
+        r = current_color.red;
+        g = current_color.green;
+        b = current_color.blue;
+        w = current_color.white;
+        fade_r = (r - 0 * PWM_SCALE) /fade_factor;
+        fade_g = (g - 0 * PWM_SCALE) /fade_factor;
+        fade_b = (b - 0 * PWM_SCALE) /fade_factor;
+        fade_w = (w - 0 * PWM_SCALE) /fade_factor;
+        printf("%s:Current colour before breath set r=%d, g=%d, b=%d, w=%d, r f=%d, g f=%d, b f=%d, w f=%d\n",__func__, r, g, b, w, fade_r, fade_g, fade_b, fade_w );
+        
+        for (i=0; i< fade_factor ; i++)
+        {
+            r -= fade_r;
+            g -= fade_g;
+            b -= fade_b;
+            w -= fade_w;
+            set_colours (r, g, b, w);
+            vTaskDelay (TWENTY_MS/portTICK_PERIOD_MS);
+        }
+        vTaskDelay (FIFTY_MS/portTICK_PERIOD_MS);
+
+        printf("%s:Current colour after breath set r=%d, g=%d, b=%d, w=%d, r f=%d, g f=%d, b f=%d, w f=%d\n",__func__, r, g, b, w, fade_r, fade_g, fade_b, fade_w );
+        
+        current_color.red   = 0;
+        current_color.green = 0;
+        current_color.blue  = 0;
+        current_color.white = 0;
+        multipwm_stop(&pwm_info);
+    }
+    
+    printf("%s:Current colour after set r=%d,g=%d, b=%d, w=%d,\n",__func__, current_color.red,current_color.green, current_color.blue, current_color.white );
+}
 
 homekit_value_t led_on_get() {
     return HOMEKIT_BOOL(led_on);
@@ -469,11 +555,12 @@ void led_on_set(homekit_value_t value) {
     {
         printf ("%s: Led on false so stopping Multi PWM\n", __func__);
         multipwm_stop(&pwm_info);
-        sdk_os_timer_disarm (&rgbw_set_timer);
+        // sdk_os_timer_disarm (&rgbw_set_timer);
+        sdk_os_timer_arm (&rgbw_onoff_timer, RGBW_SET_DELAY, 0 );
     } else
     {
         printf ("%s: Led on TRUE so setting colour\n", __func__);
-        sdk_os_timer_arm (&rgbw_set_timer, RGBW_SET_DELAY, 0 );
+        sdk_os_timer_arm (&rgbw_onoff_timer, RGBW_SET_DELAY, 0 );
     }
     sdk_os_timer_arm (&save_timer, SAVE_DELAY, 0 );
 }
@@ -559,11 +646,12 @@ void rgbw_lights_init() {
     led_saturation = saturation.value.float_value;
     led_brightness = brightness.value.int_value;
 
+    sdk_os_timer_setfn(&rgbw_onoff_timer, rgbw_set_breath, NULL);
     sdk_os_timer_setfn(&rgbw_set_timer, rgbw_set, NULL);
     sdk_os_timer_setfn(&gpio_timer, gpio_update_set, NULL);
     sdk_os_timer_setfn(&save_timer, save_characteristics, NULL);
     
-    sdk_os_timer_arm (&rgbw_set_timer, RGBW_SET_DELAY, 0 );
+    sdk_os_timer_arm (&rgbw_onoff_timer, RGBW_SET_DELAY, 0 );
 
     printf ("%s: sdk_os_timer_Setfn called\n", __func__);
     
