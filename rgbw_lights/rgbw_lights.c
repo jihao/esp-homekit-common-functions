@@ -469,7 +469,7 @@ void rgbw_set_breath(){
         HSVtoRGB(led_hue, led_saturation, led_brightness, &target_color);
         printf("%s: h=%d,s=%d,b=%d => r=%d,g=%d, b=%d\n",__func__, (int)led_hue,(int)led_saturation,(int)led_brightness, target_color.red,target_color.green, target_color.blue );
         
-        RBGtoRBGW (&target_color);
+        RBGtoRBGW (&target_color, pure_white.value.bool_value);
         printf("%s: h=%d,s=%d,b=%d => r=%d,g=%d, b=%d, w=%d,\n",__func__, (int)led_hue,(int)led_saturation,(int)led_brightness, target_color.red,target_color.green, target_color.blue, target_color.white );
         printf ("%s: GPIOS are set as follows : W=%d, R=%d, G=%d, B=%d\n",__func__, white_gpio.value.int_value,red_gpio.value.int_value, green_gpio.value.int_value, blue_gpio.value.int_value );
 
