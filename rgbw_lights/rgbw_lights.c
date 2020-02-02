@@ -637,11 +637,13 @@ void rgbw_lights_init() {
 
      
      /* load last saved HSI colour */
+    load_characteristic_from_flash(&on);
     load_characteristic_from_flash(&saturation);
     load_characteristic_from_flash(&hue);
     load_characteristic_from_flash(&brightness);
     load_characteristic_from_flash(&pure_white);
     
+    led_on = on.value.bool_value;
     led_hue = hue.value.float_value;
     led_saturation = saturation.value.float_value;
     led_brightness = brightness.value.int_value;
