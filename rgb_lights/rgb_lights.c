@@ -625,7 +625,7 @@ void rgb_lights_init() {
     load_characteristic_from_flash(&blue_gpio);
     
     /* set up multipwm */
-    pwm_info.channels = 4;     
+    pwm_info.channels = 3;     
     multipwm_init(&pwm_info);
     multipwm_set_freq(&pwm_info, 65535);
     // multipwm_set_pin(&pwm_info, white_pin, white_gpio.value.int_value );
