@@ -43,6 +43,9 @@ void accessory_init_not_paired(void);
 void standard_init (homekit_characteristic_t *name, homekit_characteristic_t *manufacturer, homekit_characteristic_t *model, homekit_characteristic_t *serial, homekit_characteristic_t *revision);
 /* initalises UART, UDPLOG, gets sys param info, creates accessory name and readys OAT parameters */
 
+void standard_init_no_ota (homekit_characteristic_t *name, homekit_characteristic_t *manufacturer, homekit_characteristic_t *model, homekit_characteristic_t *serial, homekit_characteristic_t *revision);
+/* initalises UART, UDPLOG, gets sys param info, creates accessory name and readys OAT parameters */
+
 void reset_button_callback(uint8_t gpio, void* args, uint8_t param);
 /* called when reset button is pressed, calls reset_buton */
 

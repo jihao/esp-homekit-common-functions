@@ -392,3 +392,38 @@ void standard_init (homekit_characteristic_t *name, homekit_characteristic_t *ma
 
 }
 
+void standard_init_no_ota (homekit_characteristic_t *name, homekit_characteristic_t *manufacturer, homekit_characteristic_t *model, homekit_characteristic_t *serial, homekit_characteristic_t *revision){
+    
+   
+    uart_set_baud(0, 115200);
+    udplog_init(tskIDLE_PRIORITY+1);
+    printf("%s:SDK version: %s, free heap %u\n", __func__, sdk_system_get_sdk_version(),
+           xPortGetFreeHeapSize());
+
+    get_sysparam_info();
+    
+    load_characteristic_from_flash (&wifi_check_interval);
+    
+    create_accessory_name(name->value.string_value, model->value.string_value, name, serial);
+
+    char **serial_str = &serial->value.string_value;
+    uint8_t macaddr[6];
+    sdk_wifi_get_macaddr(STATION_IF, macaddr);
+    *serial_str=malloc(18);
+    sprintf(*serial_str,"%02X:%02X:%02X:%02X:%02X:%02X",macaddr[0], macaddr[1], macaddr[2], macaddr[3], macaddr[4], macaddr[5]);
+    
+    printf ("%s: name = %s, manufacturer = %s, model = %s, serial = %s, revision = %s\n", __func__, 
+        name->value.string_value,
+        manufacturer->value.string_value,
+        model->value.string_value,
+        serial->value.string_value,
+        revision->value.string_value);
+
+    if (wifi_check_interval.value.int_value!=0){
+        xTaskCreate (checkWifiTask, "Check WiFi Task", 256, NULL, tskIDLE_PRIORITY+1, &wifi_check_interval_task_handle);
+    }
+    sdk_os_timer_setfn(&save_timer, save_characteristics, NULL);
+
+}
+
+
