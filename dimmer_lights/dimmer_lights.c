@@ -376,7 +376,7 @@ void rgbw_set(){
         set_colours (current_color.white);
 
     } else {
-        printf("%s: led srtip off\n", __func__);
+        printf("%s: led strip off\n", __func__);
         multipwm_stop(&pwm_info);
     }
     
@@ -390,7 +390,7 @@ void rgbw_set_breath(){
     previous_colour_effect = off_effect;
     
     float fade_factor = 50;
-    int  fade_w,  w, i;
+    int  slow_fade_w, fade_w,  w, i;
     
     printf("\n%s\n", __func__);
     printf("%s: Current colour before set w=%d,\n",__func__, current_color.white );
@@ -401,15 +401,25 @@ void rgbw_set_breath(){
 
         w = current_color.white;
 
+        slow_fade_w = (w - target_color.white) /(fade_factor*2);
+        printf("%s:Current colour before breath set w=%d, w slow_fade_w=%d\n",__func__, w, slow_fade_w );
+        for (i=0; i< fade_factor ; i++)
+        {
+            w -= slow_fade_w;
+            set_colours (w);
+            vTaskDelay (TEN_MS/portTICK_PERIOD_MS);
+        }
+
         fade_w = (w - target_color.white) /fade_factor;
-        printf("%s:Current colour before breath set w=%d, w f=%d\n",__func__, w, fade_w );
+        printf("%s:Current colour before breath set w=%d, w fade_w=%d\n",__func__, w, fade_w );
         
         for (i=0; i< fade_factor ; i++)
         {
             w -= fade_w;
             set_colours (w);
-            vTaskDelay (TWENTY_MS/portTICK_PERIOD_MS);
+            vTaskDelay (TEN_MS/portTICK_PERIOD_MS);
         }
+        set_colours (target_color.white); // for more accuracy
         vTaskDelay (FIFTY_MS/portTICK_PERIOD_MS);
 
         printf("%s:Current colour after breath set w=%d, w f=%d\n",__func__, w, fade_w );
@@ -419,9 +429,19 @@ void rgbw_set_breath(){
         // set_colours (current_color.red, current_color.green, current_color.blue, current_color.white);
 
     } else {
-        printf("%s: led srtip off\n", __func__);
+        printf("%s: led strip off\n", __func__);
 
         w = current_color.white;
+
+        slow_fade_w = (w - 0) /(fade_factor*2);
+        printf("%s:Current colour before breath set w=%d, w slow_fade_w=%d\n",__func__, w, slow_fade_w );
+        for (i=0; i< fade_factor ; i++)
+        {
+            w -= slow_fade_w;
+            set_colours (w);
+            vTaskDelay (TEN_MS/portTICK_PERIOD_MS);
+        }
+
         fade_w = (w - 0 * PWM_SCALE) /fade_factor;
         printf("%s:Current colour before breath set w=%d, w f=%d\n",__func__, w, fade_w );
         
@@ -429,7 +449,7 @@ void rgbw_set_breath(){
         {
             w -= fade_w;
             set_colours (w);
-            vTaskDelay (TWENTY_MS/portTICK_PERIOD_MS);
+            vTaskDelay (TEN_MS/portTICK_PERIOD_MS);
         }
         vTaskDelay (FIFTY_MS/portTICK_PERIOD_MS);
 
@@ -457,7 +477,7 @@ void led_on_set(homekit_value_t value) {
     if (led_on == false )
     {
         printf ("%s: Led on false so stopping Multi PWM\n", __func__);
-        multipwm_stop(&pwm_info);
+        // multipwm_stop(&pwm_info);
         // sdk_os_timer_disarm (&rgbw_set_timer);
         sdk_os_timer_arm (&rgbw_onoff_timer, RGBW_SET_DELAY, 0 );
     } else
