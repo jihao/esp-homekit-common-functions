@@ -182,6 +182,59 @@ homekit_value_t colours_smooth_get ( ) {
 }
 
 
+void fadein_colours_task(){
+ 
+    colours_fadein.value.bool_value = true;
+    homekit_characteristic_notify(&colours_fadein,colours_fadein.value );
+    
+    printf ("%s: \n", __func__);
+    
+    float fade_factor = 50;
+    int  slow_fade_w, fade_w,  w, i;
+    
+    printf("%s: Current colour before set w=%d,\n",__func__, current_color.white );
+
+    if (led_on==true) {
+        // convert HSI to RGBW
+        
+        target_color.white = led_brightness * 2.55 * PWM_SCALE;  // MAX_COLOR = 255x256 = 65280
+
+        w = current_color.white;
+
+        slow_fade_w = (w - target_color.white) /(fade_factor*2);
+        printf("%s:Current colour before breath set w=%d, w slow_fade_w=%d\n",__func__, w, slow_fade_w );
+        for (i=0; i< fade_factor ; i++)
+        {
+            w -= slow_fade_w;
+            set_colours (w);
+            vTaskDelay (TEN_MS/portTICK_PERIOD_MS);
+        }
+
+        fade_w = (w - target_color.white) /fade_factor;
+        printf("%s:Current colour before breath set w=%d, w fade_w=%d\n",__func__, w, fade_w );
+        
+        for (i=0; i< fade_factor ; i++)
+        {
+            w -= fade_w;
+            set_colours (w);
+            vTaskDelay (TEN_MS/portTICK_PERIOD_MS);
+        }
+
+        current_color.white = target_color.white;
+
+        while (1) {
+            set_colours (w); // for more accuracy
+            vTaskDelay (TEN_MS/portTICK_PERIOD_MS);
+        }
+    }
+}
+
+
+homekit_value_t colours_fadein_get ( ) {
+    return (HOMEKIT_BOOL(colours_fadein.value.bool_value));
+}
+
+
 void colour_effect_reset (){
     
     if (previous_colour_effect == strobe_effect) {
@@ -203,6 +256,11 @@ void colour_effect_reset (){
     if (previous_colour_effect == smooth_effect ){
         colours_smooth.value.bool_value = false;
         homekit_characteristic_notify(&colours_smooth,colours_smooth.value );
+    }
+    
+    if (previous_colour_effect == fadein_effect ){
+        colours_fadein.value.bool_value = false;
+        homekit_characteristic_notify(&colours_fadein,colours_fadein.value );
     }
     
     if (previous_colour_effect == cycle_effect ){
@@ -254,6 +312,10 @@ void colour_effect_start_stop (int effect_set) {
                 xTaskCreate(smooth_colours_task, "smooth_colours_task", 512 , NULL, tskIDLE_PRIORITY+1, &colours_effect_handle);
                 printf ("%s: Effect: Smoth\n",__func__);
                 break;
+            case fadein_effect:
+                xTaskCreate(fadein_colours_task, "fadein_colours_task", 512 , NULL, tskIDLE_PRIORITY+1, &colours_effect_handle);
+                printf ("%s: Effect: Fadein\n",__func__);
+                break;
             default:
                 printf ("%s: Unknown effect: %d\n",__func__, effect_set);
         }
@@ -304,6 +366,14 @@ void colours_smooth_set (homekit_value_t value) {
     
     printf("%s:\n", __func__);
     colour_effect_start_stop (smooth_effect);
+    colours_gpio_test.value.bool_value = value.bool_value;
+}
+
+
+void colours_fadein_set (homekit_value_t value) {
+    
+    printf("%s:\n", __func__);
+    colour_effect_start_stop (fadein_effect);
     colours_gpio_test.value.bool_value = value.bool_value;
 }
 
@@ -369,7 +439,8 @@ void rgbw_set(){
     printf("%s: Current colour before set w=%d,\n",__func__, current_color.white );
     if (led_on==true) {
         // convert HSI to RGBW
-        target_color.white = led_brightness * 2.55 * PWM_SCALE;
+        float zoom = (1 + (1.55 / 100) * led_brightness);
+        target_color.white = led_brightness * zoom * PWM_SCALE;
 
         current_color.white = target_color.white ;
         
@@ -397,7 +468,7 @@ void rgbw_set_breath(){
     if (led_on==true) {
         // convert HSI to RGBW
         
-        target_color.white = led_brightness * 2.55 * PWM_SCALE;
+        target_color.white = led_brightness * 2.55 * PWM_SCALE;  // MAX_COLOR = 255x256 = 65280
 
         w = current_color.white;
 
@@ -420,7 +491,7 @@ void rgbw_set_breath(){
             vTaskDelay (TEN_MS/portTICK_PERIOD_MS);
         }
         set_colours (target_color.white); // for more accuracy
-        vTaskDelay (FIFTY_MS/portTICK_PERIOD_MS);
+        vTaskDelay (TEN_MS/portTICK_PERIOD_MS);
 
         printf("%s:Current colour after breath set w=%d, w f=%d\n",__func__, w, fade_w );
         
@@ -451,7 +522,7 @@ void rgbw_set_breath(){
             set_colours (w);
             vTaskDelay (TEN_MS/portTICK_PERIOD_MS);
         }
-        vTaskDelay (FIFTY_MS/portTICK_PERIOD_MS);
+        vTaskDelay (TEN_MS/portTICK_PERIOD_MS);
 
         printf("%s:Current colour after breath set w=%d, w f=%d\n",__func__, w, fade_w );
         
@@ -459,7 +530,7 @@ void rgbw_set_breath(){
         multipwm_stop(&pwm_info);
     }
     
-    printf("%s:Current colour after set w=%d,\n",__func__, current_color.white );
+    //printf("%s:Current colour after set w=%d,\n",__func__, current_color.white );
 }
 
 homekit_value_t led_on_get() {

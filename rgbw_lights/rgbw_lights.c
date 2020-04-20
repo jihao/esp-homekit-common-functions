@@ -431,7 +431,8 @@ void rgbw_set(){
     if (led_on==true) {
         // convert HSI to RGBW
         
-        HSVtoRGB(led_hue, led_saturation, led_brightness, &target_color);
+        float zoom = (0.3 + (0.7 / 100) * led_brightness);
+        HSVtoRGB(led_hue, led_saturation, led_brightness * zoom, &target_color);
         printf("%s: h=%d,s=%d,b=%d => r=%d,g=%d, b=%d\n",__func__, (int)led_hue,(int)led_saturation,(int)led_brightness, target_color.red,target_color.green, target_color.blue );
         
         RBGtoRBGW (&target_color, pure_white.value.bool_value);
@@ -455,7 +456,7 @@ void rgbw_set(){
 void rgbw_set_breath(){
 
     /* make sure there are no effects running */
-    colour_effect_reset();
+    // colour_effect_reset();
     previous_colour_effect = off_effect;
     
     float fade_factor = 50;
@@ -466,7 +467,8 @@ void rgbw_set_breath(){
     if (led_on==true) {
         // convert HSI to RGBW
         
-        HSVtoRGB(led_hue, led_saturation, led_brightness, &target_color);
+        float zoom = (0.3 + (0.7 / 100) * led_brightness);
+        HSVtoRGB(led_hue, led_saturation, led_brightness * zoom, &target_color);
         printf("%s: h=%d,s=%d,b=%d => r=%d,g=%d, b=%d\n",__func__, (int)led_hue,(int)led_saturation,(int)led_brightness, target_color.red,target_color.green, target_color.blue );
         
         RBGtoRBGW (&target_color, pure_white.value.bool_value);
@@ -515,7 +517,7 @@ void rgbw_set_breath(){
         current_color.white = target_color.white * PWM_SCALE;
         set_colours (current_color.red, current_color.green, current_color.blue, current_color.white);
 
-        vTaskDelay (FIFTY_MS/portTICK_PERIOD_MS);
+        // vTaskDelay (FIFTY_MS/portTICK_PERIOD_MS);
 
         printf("%s:Current colour after breath set r=%d, g=%d, b=%d, w=%d, r f=%d, g f=%d, b f=%d, w f=%d\n",__func__, r, g, b, w, fade_r, fade_g, fade_b, fade_w );
 
@@ -558,7 +560,7 @@ void rgbw_set_breath(){
             set_colours (r, g, b, w);
             vTaskDelay (TEN_MS/portTICK_PERIOD_MS);
         }
-        vTaskDelay (FIFTY_MS/portTICK_PERIOD_MS);
+        // vTaskDelay (FIFTY_MS/portTICK_PERIOD_MS);
 
         printf("%s:Current colour after breath set r=%d, g=%d, b=%d, w=%d, r f=%d, g f=%d, b f=%d, w f=%d\n",__func__, r, g, b, w, fade_r, fade_g, fade_b, fade_w );
         

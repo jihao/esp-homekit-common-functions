@@ -430,8 +430,8 @@ void rgbw_set(){
     printf("%s: Current colour before set r=%d,g=%d, b=%d, w=%d,\n",__func__, current_color.red,current_color.green, current_color.blue, current_color.white );
     if (led_on==true) {
         // convert HSI to RGBW
-        
-        HSVtoRGB(led_hue, led_saturation, led_brightness, &target_color);
+        float zoom = (0.3 + (0.7 / 100) * led_brightness);
+        HSVtoRGB(led_hue, led_saturation, led_brightness * zoom, &target_color);
         printf("%s: h=%d,s=%d,b=%d => r=%d,g=%d, b=%d\n",__func__, (int)led_hue,(int)led_saturation,(int)led_brightness, target_color.red,target_color.green, target_color.blue );
         
         // RBGtoRBGW (&target_color, pure_white.value.bool_value);
@@ -466,7 +466,8 @@ void rgbw_set_breath(){
     if (led_on==true) {
         // convert HSI to RGBW
         
-        HSVtoRGB(led_hue, led_saturation, led_brightness, &target_color);
+        float zoom = (0.3 + (0.7 / 100) * led_brightness);
+        HSVtoRGB(led_hue, led_saturation, led_brightness * zoom, &target_color);
         printf("%s: h=%d,s=%d,b=%d => r=%d,g=%d, b=%d\n",__func__, (int)led_hue,(int)led_saturation,(int)led_brightness, target_color.red,target_color.green, target_color.blue );
         
         // RBGtoRBGW (&target_color, pure_white.value.bool_value);
