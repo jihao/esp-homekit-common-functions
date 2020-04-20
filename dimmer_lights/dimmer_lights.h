@@ -15,7 +15,7 @@
 #ifndef DIMMER_LIGHTS_H
 #define DIMMER_LIGHTS_H
 
-#define PWM_SCALE 255
+#define PWM_SCALE 256
 #define RGBW_SET_DELAY 10
 #define SAVE_DELAY 5000
 #define EFFECT_DELAY 500
@@ -54,7 +54,7 @@
 
 
 enum {white_pin=0, blue_pin=1, green_pin=2, red_pin=3} led_pins;
-enum {cycle_effect, strobe_effect, flash_effect, fade_effect, smooth_effect, off_effect} effects_e;
+enum {cycle_effect, strobe_effect, flash_effect, fade_effect, smooth_effect, fadein_effect, off_effect} effects_e;
 
 static pwm_info_t pwm_info;
 ETSTimer rgbw_onoff_timer;
@@ -82,6 +82,7 @@ extern homekit_characteristic_t colours_strobe;
 extern homekit_characteristic_t colours_flash;
 extern homekit_characteristic_t colours_fade;
 extern homekit_characteristic_t colours_smooth;
+extern homekit_characteristic_t colours_fadein;
 extern homekit_characteristic_t pure_white;
 
 void on_update(homekit_characteristic_t *ch, homekit_value_t value, void *context);
@@ -120,6 +121,8 @@ void colours_fade_set (homekit_value_t value);
 
 void colours_smooth_set (homekit_value_t value);
 
+void colours_fadein_set (homekit_value_t value);
+
 void colour_effect_start_stop (int effect);
 
 homekit_value_t colours_gpio_test_get ( );
@@ -131,6 +134,8 @@ homekit_value_t colours_flash_get ( );
 homekit_value_t colours_fade_get ( );
 
 homekit_value_t colours_smooth_get ( );
+
+homekit_value_t colours_fadein_get ( );
 
 void colour_effect_reset ();
 
