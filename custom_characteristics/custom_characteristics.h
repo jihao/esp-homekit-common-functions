@@ -262,6 +262,20 @@
 .value = HOMEKIT_BOOL_(_value), \
 ##__VA_ARGS__
 
+#define HOMEKIT_CHARACTERISTIC_CUSTOM_POWER_ON_STRATEGY HOMEKIT_CUSTOM_UUID("F0000015")
+#define HOMEKIT_DECLARE_CHARACTERISTIC_CUSTOM_POWER_ON_STRATEGY(_value, ...) \
+.type = HOMEKIT_CHARACTERISTIC_CUSTOM_POWER_ON_STRATEGY, \
+.description = "Power-on Strategy", \
+.format = homekit_format_uint8, \
+.permissions = homekit_permissions_paired_read \
+| homekit_permissions_paired_write \
+| homekit_permissions_notify, \
+.min_value = (float[]) {0}, \
+.max_value = (float[]) {2}, \
+.min_step = (float[]) {1}, \
+.value = HOMEKIT_UINT8_(_value), \
+##__VA_ARGS__
+
 #endif
 
 void save_characteristic_to_flash (homekit_characteristic_t *ch, homekit_value_t value);
